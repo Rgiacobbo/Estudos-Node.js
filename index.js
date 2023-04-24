@@ -22,11 +22,24 @@ const PORT = 3333;
  * http://localhost:3333/users/:id -> Remover um registro especifico do recurso
  */
 
-app.use("/", (request, response) => {
-  console.log(request.method);
-  console.log(request.headers);
-  console.log(request.url);
-  response.end("Hello, world!");
+app.get("/users", (request, response) => {
+  response.end("Listagem de usuários");
+});
+
+app.get("/users/:id", (request, response) => {
+  const id = request.params.id;
+
+  response.end("Informações sobre o usuário " + id);
+});
+
+app.post("/users", (request, response) => {
+  response.end("Criação de usuário");
+});
+
+app.put("/users/:id", (request, response) => {
+  const id = request.params.id;
+
+  response.end("Edição de usuário " + id);
 });
 
 app.listen(PORT, () => {
