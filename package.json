@@ -1,0 +1,11 @@
+{
+  "name": "Estudos-Node.js",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:Rgiacobbo/Estudos-Node.js.git",
+  "author": "Rgiacobbo <rgiacobbofilho@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
