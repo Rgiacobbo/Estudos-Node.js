@@ -1,53 +1,71 @@
+const uuid = require("uuid");
+
+const { generateHash } = require("../utils/hashProvider");
+
 const users = [
   {
-    id: 1,
-    name: "John joe",
-    email: "john.doe@example.com",
-    password: "password",
+    id: "b958fa6c-6a6b-4e41-8c06-aded697aacb7",
+    name: "John Doe",
+    email: "john.doe@example.com.br",
+    password: "$2a$08$lLiD3zFc7917WRiHwhOkZONuceba2NTEO2bAGTwwxouYpAhNOooP2",
     age: 21,
   },
 ];
 
 const list = (request, response) => {
-  response.json(users);
+  return response.json(users);
 };
 
 const getById = (request, response) => {
   const { id } = request.params;
 
-  const user = users.find((u) => u.id === Number(id));
+  const user = users.find((u) => u.id === id);
 
-  response.json(user);
+  if (!user) {
+    return response.status(400).json({
+      error: "@users/getById",
+      message: `User not found ${id}`,
+    });
+  }
+
+  return response.json(user);
 };
 
-const create = (request, response) => {
-  const { id, name, email, password, age } = request.body;
+const create = async (request, response) => {
+  const { name, email, password, age } = request.body;
+
+  const id = uuid.v4();
+
+  const hashedPassword = await generateHash(password);
 
   const user = {
     id,
     name,
     email,
-    password,
+    password: hashedPassword,
     age,
   };
 
   users.push(user);
 
-  response.json(user);
+  return response.status(201).json(user);
 };
 
 const update = (request, response) => {
   const { id } = request.params;
   const { name, email, password, age } = request.body;
 
-  const userIndex = users.findIndex((u) => u.id === Number(id));
+  const userIndex = users.findIndex((u) => u.id === id);
 
   if (userIndex < 0) {
-    response.end("usuário não encontrado");
+    return response.json({
+      error: "@users/update",
+      message: `User not found ${id}`,
+    });
   }
 
   const userUpdate = {
-    id: Number(id),
+    id,
     name,
     email,
     password,
@@ -56,20 +74,23 @@ const update = (request, response) => {
 
   users[userIndex] = userUpdate;
 
-  response.json(userUpdate);
+  return response.json(userUpdate);
 };
 
 const remove = (request, response) => {
   const { id } = request.params;
 
-  const userIndex = users.findIndex((u) => u.id === Number(id));
+  const userIndex = users.findIndex((u) => u.id === id);
 
   if (userIndex < 0) {
-    response.end("Usuário não encontrado");
+    return response.status(400).json({
+      error: "@users/remove",
+      message: `User not found ${id}`,
+    });
   }
 
   users.splice(userIndex, 1);
-  response.end("Usuário removido com sucesso");
+  return response.send();
 };
 
 module.exports = {
@@ -78,4 +99,5 @@ module.exports = {
   create,
   update,
   remove,
+  userDatabase: users,
 };
