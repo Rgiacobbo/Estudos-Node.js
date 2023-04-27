@@ -1,6 +1,19 @@
 const uuid = require("uuid");
 
-const movies = [];
+const movies = [
+  {
+    title: "The Shawshank Redemption",
+    description:
+      "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
+    year: 1994,
+    genres: ["Drama"],
+    image:
+      "https://www.themoviedb.org/t/p/original/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg",
+    video: "https://www.youtube.com/watch?v=6hB3S9bIaco",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+];
 
 const list = (request, response) => {
   return response.json(movies);
@@ -33,6 +46,8 @@ const create = (request, response) => {
     genres,
     image,
     video,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   movies.push(movie);
@@ -53,6 +68,8 @@ const update = (request, response) => {
     });
   }
 
+  const { createdAt } = movies[movieIndex];
+
   const movieUpdated = {
     id,
     title,
@@ -61,6 +78,8 @@ const update = (request, response) => {
     genres,
     image,
     video,
+    createdAt,
+    updatedAt: new Date(),
   };
 
   movies[movieIndex] = movieUpdated;

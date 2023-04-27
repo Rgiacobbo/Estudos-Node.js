@@ -9,6 +9,8 @@ const users = [
     email: "john.doe@example.com.br",
     password: "$2a$08$lLiD3zFc7917WRiHwhOkZONuceba2NTEO2bAGTwwxouYpAhNOooP2",
     age: 21,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   },
 ];
 
@@ -44,6 +46,8 @@ const create = async (request, response) => {
     email,
     password: hashedPassword,
     age,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   users.push(user);
@@ -51,7 +55,7 @@ const create = async (request, response) => {
   return response.status(201).json(user);
 };
 
-const update = (request, response) => {
+const update = async (request, response) => {
   const { id } = request.params;
   const { name, email, password, age } = request.body;
 
@@ -64,13 +68,22 @@ const update = (request, response) => {
     });
   }
 
+  const { createdAt } = users[userIndex];
+
   const userUpdate = {
     id,
     name,
     email,
-    password,
     age,
+    createdAt,
+    updatedAt: new Date(),
   };
+
+  if (password) {
+    userUpdate.password = await generateHash(password);
+  } else {
+    userUpdate.password = users[userIndex].password;
+  }
 
   users[userIndex] = userUpdate;
 

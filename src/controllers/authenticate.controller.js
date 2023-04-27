@@ -1,3 +1,7 @@
+const jwt = require("jsonwebtoken");
+
+const { JWT_SECRET } = require("../config/env");
+
 const { userDatabase } = require("./users.controller");
 
 const { compareHash } = require("../utils/hashProvider");
@@ -22,9 +26,14 @@ const login = async (request, response) => {
     return response.status(400).json(loginErrorMessage);
   }
 
-  delete user.password;
+  const userLoged = { ...user };
 
-  return response.send(user);
+  const token = jwt.sign(user, JWT_SECRET, {
+    expiresIn: "1h",
+  });
+  delete userLoged.password;
+
+  return response.send({ ...userLoged, token });
 };
 
 module.exports = {
