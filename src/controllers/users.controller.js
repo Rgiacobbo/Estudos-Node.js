@@ -1,109 +1,103 @@
-const uuid = require("uuid");
+const UserModel = require("../model/user.model");
 
-const { generateHash } = require("../utils/hashProvider");
+const list = async (request, response) => {
+  try {
+    const users = await UserModel.find({}, { password: 0 });
 
-const users = [
-  {
-    id: "b958fa6c-6a6b-4e41-8c06-aded697aacb7",
-    name: "John Doe",
-    email: "john.doe@example.com.br",
-    password: "$2a$08$lLiD3zFc7917WRiHwhOkZONuceba2NTEO2bAGTwwxouYpAhNOooP2",
-    age: 21,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-const list = (request, response) => {
-  return response.json(users);
-};
-
-const getById = (request, response) => {
-  const { id } = request.params;
-
-  const user = users.find((u) => u.id === id);
-
-  if (!user) {
+    return response.json(users);
+  } catch (err) {
     return response.status(400).json({
-      error: "@users/getById",
-      message: `User not found ${id}`,
+      error: "@users/list",
+      message: err.message || "Failed to list users",
     });
   }
+};
 
-  return response.json(user);
+const getById = async (request, response) => {
+  const { id } = request.params;
+
+  try {
+    const user = await UserModel.findById(id, { password: 0 });
+
+    if (!user) {
+      throw new Error();
+    }
+
+    return response.json(user);
+  } catch (err) {
+    return response.status(400).json({
+      error: "@users/getById",
+      message: err.message || `User not found ${id}`,
+    });
+  }
 };
 
 const create = async (request, response) => {
   const { name, email, password, age } = request.body;
 
-  const id = uuid.v4();
+  try {
+    const user = await UserModel.create({
+      name,
+      email,
+      password,
+      age,
+    });
 
-  const hashedPassword = await generateHash(password);
-
-  const user = {
-    id,
-    name,
-    email,
-    password: hashedPassword,
-    age,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  users.push(user);
-
-  return response.status(201).json(user);
+    return response.status(201).json(user);
+  } catch (err) {
+    return response.status(400).json({
+      error: "@users/create",
+      message: err.message || "Failed to create user",
+    });
+  }
 };
 
 const update = async (request, response) => {
   const { id } = request.params;
   const { name, email, password, age } = request.body;
 
-  const userIndex = users.findIndex((u) => u.id === id);
+  try {
+    const userUpdated = await UserModel.findByIdAndUpdate(
+      id,
+      {
+        name,
+        email,
+        password,
+        age,
+      },
+      { new: true }
+    );
 
-  if (userIndex < 0) {
-    return response.json({
+    if (!userUpdated) {
+      throw new Error();
+    }
+
+    return response.json(userUpdated);
+  } catch (err) {
+    return response.status(400).json({
       error: "@users/update",
-      message: `User not found ${id}`,
+      message: err.message || `User not found ${id}`,
     });
   }
-
-  const { createdAt } = users[userIndex];
-
-  const userUpdate = {
-    id,
-    name,
-    email,
-    age,
-    createdAt,
-    updatedAt: new Date(),
-  };
-
-  if (password) {
-    userUpdate.password = await generateHash(password);
-  } else {
-    userUpdate.password = users[userIndex].password;
-  }
-
-  users[userIndex] = userUpdate;
-
-  return response.json(userUpdate);
 };
 
-const remove = (request, response) => {
+const remove = async (request, response) => {
   const { id } = request.params;
 
-  const userIndex = users.findIndex((u) => u.id === id);
+  try {
+    const userDeleted = await UserModel.findByIdAndDelete(id);
 
-  if (userIndex < 0) {
+    if (!userDeleted) {
+      throw new Error();
+    }
+
+    return response.status(204).send();
+  } catch (err) {
     return response.status(400).json({
       error: "@users/remove",
-      message: `User not found ${id}`,
+      message: err.message || `User not found ${id}`,
     });
   }
-
-  users.splice(userIndex, 1);
-  return response.send();
 };
 
 module.exports = {
@@ -112,5 +106,4 @@ module.exports = {
   create,
   update,
   remove,
-  userDatabase: users,
 };

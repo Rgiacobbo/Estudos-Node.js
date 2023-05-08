@@ -1,106 +1,100 @@
-const uuid = require("uuid");
+const MovieModel = require("../model/movie.model");
 
-const movies = [
-  {
-    title: "The Shawshank Redemption",
-    description:
-      "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-    year: 1994,
-    genres: ["Drama"],
-    image:
-      "https://www.themoviedb.org/t/p/original/9O7gLzmreU0nGkIB6K3BsJbzvNv.jpg",
-    video: "https://www.youtube.com/watch?v=6hB3S9bIaco",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  },
-];
-
-const list = (request, response) => {
-  return response.json(movies);
+const list = async (request, response) => {
+  try {
+    const movies = await MovieModel.find();
+    return response.json(movies);
+  } catch (err) {
+    return response.status(400).json({
+      error: "@movies/list",
+      message: err.message || "Failed to list movies",
+    });
+  }
 };
 
-const getById = (request, response) => {
+const getById = async (request, response) => {
   const { id } = request.params;
 
-  const movie = movies.find((u) => u.id === id);
+  try {
+    const movie = await MovieModel.findById(id);
 
-  if (!movie) {
+    if (!movie) {
+      throw new Error();
+    }
+
+    return response.json(movie);
+  } catch (err) {
     return response.status(400).json({
       error: "@movies/getById",
-      message: `User not found ${id}`,
+      message: err.message || `Movie not found ${id}`,
     });
   }
-  return response.json(movie);
 };
 
-const create = (request, response) => {
+const create = async (request, response) => {
   const { title, description, year, genres, image, video } = request.body;
 
-  const id = uuid.v4();
-
-  const movie = {
-    id,
-    title,
-    description,
-    year,
-    genres,
-    image,
-    video,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  movies.push(movie);
-
-  return response.status(201).json(movie);
+  try {
+    const movie = await MovieModel.create({
+      title,
+      description,
+      year,
+      genres,
+      image,
+      video,
+    });
+    return response.status(201).json(movie);
+  } catch (err) {
+    return response.status(400).json({
+      error: "@movies/create",
+      message: err.message || "Failed to create a movie",
+    });
+  }
 };
 
-const update = (request, response) => {
+const update = async (request, response) => {
   const { id } = request.params;
   const { title, description, year, genres, image, video } = request.body;
 
-  const movieIndex = movies.findIndex((m) => m.id === id);
-
-  if (movieIndex < 0) {
+  try {
+    const movieUpdated = await MovieModel.findByIdAndUpdate(
+      id,
+      {
+        title,
+        description,
+        year,
+        genres,
+        image,
+        video,
+      },
+      { new: true }
+    );
+    return response.json(movieUpdated);
+  } catch (err) {
     return response.status(400).json({
       error: "@movies/update",
-      mesage: `Movie not found ${id}`,
+      mesage: err.message || `Movie not found ${id}`,
     });
   }
-
-  const { createdAt } = movies[movieIndex];
-
-  const movieUpdated = {
-    id,
-    title,
-    description,
-    year,
-    genres,
-    image,
-    video,
-    createdAt,
-    updatedAt: new Date(),
-  };
-
-  movies[movieIndex] = movieUpdated;
-
-  return response.json(movieUpdated);
 };
 
-const remove = (request, response) => {
+const remove = async (request, response) => {
   const { id } = request.params;
 
-  const movieIndex = movies.findIndex((m) => m.id === id);
+  try {
+    const movieRemoved = await MovieModel.findByIdAndDelete(id);
 
-  if (movieIndex < 0) {
+    if (!movieRemoved) {
+      throw new Error();
+    }
+
+    return response.status(204).send();
+  } catch (err) {
     return response.status(400).json({
       error: "@movies/remove",
-      message: `Movie not found ${id}`,
+      message: err.message || `Movie not found ${id}`,
     });
   }
-  movies.splice(movieIndex, 1);
-
-  return response.send();
 };
 
 module.exports = {
